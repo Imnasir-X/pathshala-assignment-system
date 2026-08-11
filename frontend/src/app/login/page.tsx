@@ -69,19 +69,20 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left: context panel */}
-      <aside className="login-hero hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between p-10 xl:p-14 text-stone-100">
+      <aside className="login-hero hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between p-10 xl:p-14">
         <div>
           <div className="flex items-center gap-3 mb-16">
             <BrandMark size="lg" />
             <div>
-              <p className="text-lg font-semibold tracking-tight text-white">Pathshala</p>
-              <p className="text-xs text-stone-400">Assignments &amp; submissions</p>
+              <p className="text-lg font-semibold tracking-tight text-stone-50">Pathshala</p>
+              <p className="text-xs login-hero-muted">Assignments &amp; submissions</p>
             </div>
           </div>
-          <h1 className="text-3xl xl:text-4xl font-semibold tracking-tight text-white leading-[1.15] max-w-md">
-            Schoolwork that stays on track.
+          <h1 className="text-3xl xl:text-[2.35rem] font-semibold tracking-tight leading-[1.2] max-w-md">
+            Schoolwork that stays{' '}
+            <span className="login-hero-accent">on track</span>.
           </h1>
-          <p className="mt-4 text-stone-400 text-[0.95rem] leading-relaxed max-w-sm">
+          <p className="mt-4 login-hero-muted text-[0.95rem] leading-relaxed max-w-sm">
             Teachers publish class work. Students submit before the deadline.
             Marks and feedback land in one place.
           </p>
@@ -93,9 +94,9 @@ export default function LoginPage() {
               { t: 'Teacher', d: 'Assign & grade' },
               { t: 'Student', d: 'Submit work' },
             ].map((x) => (
-              <div key={x.t} className="rounded-lg border border-white/10 bg-white/5 px-3 py-3">
-                <p className="text-xs font-semibold text-teal-300">{x.t}</p>
-                <p className="text-[11px] text-stone-500 mt-0.5">{x.d}</p>
+              <div key={x.t} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-3">
+                <p className="text-xs font-semibold login-hero-chip-title">{x.t}</p>
+                <p className="text-[11px] login-hero-muted mt-0.5">{x.d}</p>
               </div>
             ))}
           </div>
