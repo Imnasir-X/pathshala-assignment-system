@@ -9,7 +9,7 @@ import { apiPost, ApiErrorImpl } from '@/lib/api-client';
 import { setToken, setRole, setFullName } from '@/lib/auth';
 import type { LoginResponse } from '@/lib/types';
 import { BrandMark } from '@/components/ui';
-import RisingLines from '@/components/rising-lines';
+import ChromaticWaves from '@/components/chromatic-waves';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -71,9 +71,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left: context panel */}
       <aside className="login-hero relative hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between p-10 xl:p-14 overflow-hidden">
-        <RisingLines
+        <ChromaticWaves
           style={{ position: 'absolute', inset: 0, zIndex: 0 }}
           aria-hidden
+          colors={['#5eead4', '#99f6e4', '#2dd4bf', '#14b8a6', '#0f766e', '#ffffff']}
+          cellSize={40}
+          speed={3}
         />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-16">
