@@ -390,3 +390,24 @@ button, a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Scramble button: light sweep band */
+.scramble-sweep {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  animation: scramble-sweep 1.2s linear forwards;
+}
+
+@keyframes scramble-sweep {
+  0%   { transform: translateY(-110%) scaleX(1.25); }
+  50%  { transform: translateY(110%) scaleX(1.25); }
+  100% { transform: translateY(-110%) scaleX(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scramble-sweep {
+    animation: none;
+  }
+}

@@ -10,6 +10,7 @@ import { setToken, setRole, setFullName } from '@/lib/auth';
 import type { LoginResponse } from '@/lib/types';
 import { BrandMark } from '@/components/ui';
 import ChromaticWaves from '@/components/chromatic-waves';
+import ScrambleButton from '@/components/scramble-button';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -186,9 +187,13 @@ export default function LoginPage() {
               {errors.password && <p className="mt-1 text-xs text-red-700">{errors.password.message}</p>}
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary w-full py-2.5 mt-1">
-              {loading ? 'Signing in…' : 'Sign in'}
-            </button>
+            <ScrambleButton
+              label="Sign in"
+              loadingLabel="Signing in…"
+              loading={loading}
+              className="btn btn-primary w-full py-2.5 mt-1"
+              sweepColor="#99f6e4"
+            />
           </form>
 
           <div className="mt-8 pt-6 border-t border-stone-200">
