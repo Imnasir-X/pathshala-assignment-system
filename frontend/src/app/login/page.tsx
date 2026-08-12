@@ -9,6 +9,7 @@ import { apiPost, ApiErrorImpl } from '@/lib/api-client';
 import { setToken, setRole, setFullName } from '@/lib/auth';
 import type { LoginResponse } from '@/lib/types';
 import { BrandMark } from '@/components/ui';
+import RisingLines from '@/components/rising-lines';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -69,8 +70,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left: context panel */}
-      <aside className="login-hero hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between p-10 xl:p-14">
-        <div>
+      <aside className="login-hero relative hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between p-10 xl:p-14 overflow-hidden">
+        <RisingLines
+          style={{ position: 'absolute', inset: 0, zIndex: 0 }}
+          aria-hidden
+        />
+        <div className="relative z-10">
           <div className="flex items-center gap-3 mb-16">
             <BrandMark size="lg" />
             <div>
@@ -87,7 +92,7 @@ export default function LoginPage() {
             Marks and feedback land in one place.
           </p>
         </div>
-        <div className="space-y-4">
+        <div className="relative z-10 space-y-4">
           <div className="grid grid-cols-3 gap-3 max-w-md">
             {[
               { t: 'Admin', d: 'Users & classes' },
