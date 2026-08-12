@@ -31,7 +31,7 @@ A role-based assignment and submission management app (school/college) built as 
 | Validation | FluentValidation |
 | Logging | Serilog (console + rolling file) |
 | API Docs | Swashbuckle (Swagger UI with JWT support) |
-| Frontend | Next.js 15, React, TypeScript, Tailwind CSS |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
 | Forms | react-hook-form + zod |
 | Tests | xUnit, Moq, EF Core In-Memory |
 
@@ -112,7 +112,7 @@ The frontend will be available at `http://localhost:3000`.
 ### 4. Run Tests
 
 ```bash
-cd backend
+# From the repository root (where AssignmentSystem.sln lives)
 dotnet test
 ```
 
