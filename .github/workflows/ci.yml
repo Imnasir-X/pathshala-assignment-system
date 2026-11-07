@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (.NET 9 build, tests, API smoke test)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: assignment_system
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore AssignmentSystem.sln
+      - name: Build (warnings as errors)
+        run: dotnet build AssignmentSystem.sln --no-restore -c Release -warnaserror
+      - name: Unit tests
+        run: dotnet test AssignmentSystem.sln --no-build -c Release --verbosity normal
+      - name: Check for vulnerable NuGet packages
+        run: |
+          dotnet list AssignmentSystem.sln package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -q "has the following vulnerable packages" vulnerable.txt
+      - name: API smoke test against PostgreSQL
+        working-directory: backend/AssignmentSystem.Api
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5000
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=assignment_system;Username=postgres;Password=postgres
+          Jwt__Secret: ci-only-signing-key-that-is-at-least-32-bytes-long
+        run: |
+          dotnet bin/Release/net9.0/AssignmentSystem.Api.dll > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5000/health && break; sleep 2; done
+          curl -fsS http://127.0.0.1:5000/health | grep -q Healthy
+          curl -fsS -X POST http://127.0.0.1:5000/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"admin@edu.bd","password":"Passw0rd!"}' | grep -q '"token"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/api/users)" = "401"
+      - name: API log
+        if: always()
+        run: cat backend/AssignmentSystem.Api/api.log || true
+
+  frontend:
+    name: Frontend (Node ${{ matrix.node }} lint, type-check, build)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

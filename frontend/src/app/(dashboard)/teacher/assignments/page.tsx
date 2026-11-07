@@ -14,9 +14,7 @@ export default function TeacherAssignmentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Assignment | null>(null);
 
-  const fetchAssignments = async () => {
-    setLoading(true);
-    setError(null);
+  const loadAssignments = async () => {
     try {
       setAssignments(await apiFetch<Assignment[]>('/api/assignments?page=1&pageSize=50'));
     } catch {
@@ -25,8 +23,10 @@ export default function TeacherAssignmentsPage() {
       setLoading(false);
     }
   };
+  const fetchAssignments = () => { setLoading(true); setError(null); return loadAssignments(); };
 
-  useEffect(() => { fetchAssignments(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadAssignments(); }, []);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -176,8 +176,6 @@ function CreateAssignmentForm({ onCreated }: { onCreated: () => void }) {
   });
 
   useEffect(() => {
-    setTsaLoading(true);
-    setTsaError(null);
     apiFetch<{ id: number; subjectName: string; classCourseName: string }[]>('/api/teacher-assignments?page=1&pageSize=50')
       .then(data => {
         setTsaList(data.map(d => ({ id: d.id, subjectName: d.subjectName, className: d.classCourseName })));

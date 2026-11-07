@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { clearAuth, getRole, getFullName } from '@/lib/auth';
+import { clearAuth, useRole, useFullName } from '@/lib/auth';
 import { toast } from 'sonner';
 import { BrandMark } from '@/components/ui';
 
@@ -33,14 +33,12 @@ function getInitials(name: string): string {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const role = getRole();
-  const fullName = getFullName();
+  const role = useRole();
+  const fullName = useFullName();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     clearAuth();
-    document.cookie = 'token=; path=/; max-age=0; samesite=lax';
-    document.cookie = 'role=; path=/; max-age=0; samesite=lax';
     toast.success('Signed out');
     router.push('/login');
   };

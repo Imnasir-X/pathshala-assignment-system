@@ -1,10 +1,9 @@
-# Database setup script for PostgreSQL
-# Run this before starting the backend
+-- Database setup script for PostgreSQL.
+-- Run this once before starting the backend:
+--
+--   psql -U postgres -f database/setup.sql
+--
+-- Tables are created by the EF Core migrations, which the API applies on
+-- startup (or run `dotnet ef database update` from backend/AssignmentSystem.Api).
 
-# Create the database (run as postgres user)
-psql -U postgres -c "CREATE DATABASE assignment_system;"
-
-# The EF Core migration will handle table creation automatically.
-# Run from the backend/AssignmentSystem.Api directory:
-#   dotnet ef database update
-# Or just start the app — it auto-migrates on startup in Development.
+CREATE DATABASE assignment_system;

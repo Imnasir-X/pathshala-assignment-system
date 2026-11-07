@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useCallback, useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { apiFetch, apiPut, ApiErrorImpl } from '@/lib/api-client';
 import type { Submission, Assignment } from '@/lib/types';
@@ -12,9 +12,7 @@ export default function GradingPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async () => {
     try {
       const [subs, a] = await Promise.all([
         apiFetch<Submission[]>(`/api/assignments/${id}/submissions?page=1&pageSize=50`),
@@ -27,9 +25,11 @@ export default function GradingPage({ params }: { params: Promise<{ id: string }
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+  const fetchData = () => { setLoading(true); setError(null); return loadData(); };
 
-  useEffect(() => { fetchData(); }, [id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadData(); }, [loadData]);
 
   if (loading)
     return (
@@ -141,7 +141,7 @@ function GradingCard({ submission, maxMarks }: { submission: Submission; maxMark
       </div>
 
       <div className="rounded-lg p-4 mb-4" style={{ background: 'var(--surface-muted)' }}>
-        <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Student's Answer</p>
+        <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Student&rsquo;s Answer</p>
         <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{submission.content}</p>
       </div>
 

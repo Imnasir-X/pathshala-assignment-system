@@ -55,6 +55,8 @@ export default function GlobalError({
               </button>
               <button
                 onClick={() => {
+                  // The root layout has failed, so a full reload is the reliable way back.
+                  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
                   window.location.href = '/';
                 }}
                 className="px-5 py-2.5 rounded-lg font-medium"

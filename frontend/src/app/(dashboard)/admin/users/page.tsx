@@ -19,15 +19,15 @@ export default function AdminUsersPage() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [search, setSearch] = useState('');
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
+  const loadUsers = async () => {
     try { setUsers(await apiFetch<User[]>('/api/users?page=1&pageSize=50')); }
     catch { setError('Failed to load users.'); }
     finally { setLoading(false); }
   };
+  const fetchUsers = () => { setLoading(true); setError(null); return loadUsers(); };
 
-  useEffect(() => { fetchUsers(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadUsers(); }, []);
 
   const filteredUsers = useMemo(() => {
     if (!search) return users;
@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>No users found</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Click "Add User" to create the first account.</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Click &ldquo;Add User&rdquo; to create the first account.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border bg-white shadow-sm" style={{ borderColor: 'var(--border)' }}>
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
           {search && filteredUsers.length === 0 && (
-            <div className="p-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No users match "{search}"</div>
+            <div className="p-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No users match &ldquo;{search}&rdquo;</div>
           )}
         </div>
       )}

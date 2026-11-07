@@ -21,3 +21,8 @@ frontend/.env.local
 Thumbs.db
 
 review.md
+frontend/next-env.d.ts
+frontend/tsconfig.tsbuildinfo
+*.tsbuildinfo
+coverage/
+TestResults/
