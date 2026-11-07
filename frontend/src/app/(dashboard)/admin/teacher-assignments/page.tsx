@@ -17,9 +17,7 @@ export default function AdminTeacherAssignmentsPage() {
   const [form, setForm] = useState({ teacherId: '', subjectId: '', classCourseId: '' });
   const [deleteTarget, setDeleteTarget] = useState<TSA | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
+  const loadData = async () => {
     try {
       const [tsas, users, cls, subs] = await Promise.all([
         apiFetch<TSA[]>('/api/teacher-assignments?page=1&pageSize=50'),
@@ -42,8 +40,10 @@ export default function AdminTeacherAssignmentsPage() {
       setLoading(false);
     }
   };
+  const fetchData = () => { setLoading(true); setError(null); return loadData(); };
 
-  useEffect(() => { fetchData(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadData(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

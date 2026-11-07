@@ -24,9 +24,7 @@ export default function StudentAssignmentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAssignments = async () => {
-    setLoading(true);
-    setError(null);
+  const loadAssignments = async () => {
     try {
       setAssignments(await apiFetch<Assignment[]>('/api/assignments?page=1&pageSize=50'));
     } catch {
@@ -35,8 +33,10 @@ export default function StudentAssignmentsPage() {
       setLoading(false);
     }
   };
+  const fetchAssignments = () => { setLoading(true); setError(null); return loadAssignments(); };
 
-  useEffect(() => { fetchAssignments(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadAssignments(); }, []);
 
   if (loading) {
     return (

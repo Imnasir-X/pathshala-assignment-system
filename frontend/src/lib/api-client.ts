@@ -58,6 +58,8 @@ async function doFetch<T>(path: string, options: RequestInit, token: string | nu
   if (res.status === 401) {
     clearAuth();
     if (typeof window !== 'undefined') {
+      // Full navigation on purpose: it drops all in-memory client state after the session ends.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/login';
     }
     throw new ApiErrorImpl('Unauthorized', 'Your session has expired. Please log in again.', 401);

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiPost, ApiErrorImpl } from '@/lib/api-client';
-import { setToken, setRole, setFullName } from '@/lib/auth';
+import { setToken, setRole, setFullName, setAuthCookies } from '@/lib/auth';
 import type { LoginResponse } from '@/lib/types';
 import { BrandMark } from '@/components/ui';
 import ChromaticWaves from '@/components/chromatic-waves';
@@ -48,8 +48,7 @@ export default function LoginPage() {
       setToken(response.token);
       setRole(response.role);
       setFullName(response.fullName);
-      document.cookie = `token=${response.token}; path=/; max-age=28800; samesite=lax`;
-      document.cookie = `role=${response.role}; path=/; max-age=28800; samesite=lax`;
+      setAuthCookies(response.token, response.role);
 
       if (response.role === 'Admin') router.push('/admin');
       else if (response.role === 'Teacher') router.push('/teacher/assignments');

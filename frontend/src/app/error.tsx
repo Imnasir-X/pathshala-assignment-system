@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 export default function Error({
   error,
   reset,
@@ -7,6 +9,10 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-slate-200 text-center">

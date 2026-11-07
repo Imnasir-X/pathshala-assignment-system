@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use, useRef } from 'react';
+import { useCallback, useEffect, useState, use, useRef } from 'react';
 import Link from 'next/link';
 import { apiFetch, apiPost, apiPut, ApiErrorImpl } from '@/lib/api-client';
 import type { Assignment, Submission } from '@/lib/types';
@@ -18,9 +18,7 @@ export default function StudentAssignmentDetailPage({ params }: { params: Promis
   const [hasChanges, setHasChanges] = useState(false);
   const initialContent = useRef('');
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async () => {
     try {
       const a = await apiFetch<Assignment>(`/api/assignments/${id}`);
       setAssignment(a);
@@ -36,9 +34,11 @@ export default function StudentAssignmentDetailPage({ params }: { params: Promis
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+  const fetchData = () => { setLoading(true); setError(null); return loadData(); };
 
-  useEffect(() => { fetchData(); }, [id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadData(); }, [loadData]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {

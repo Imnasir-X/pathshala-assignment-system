@@ -1,122 +1,110 @@
-# Pathshala — Assignment & Submission Management System
+# Pathshala - Assignment and Submission Management System
 
-A role-based assignment and submission management app (school/college) built as a recruitment project. ASP.NET Core Web API + PostgreSQL backend, Next.js/React/TypeScript frontend, JWT auth, and unit tests covering core business rules.
+[![CI](https://github.com/Imnasir-X/pathshala-assignment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Imnasir-X/pathshala-assignment-system/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-336791)
 
-**Product name in the UI:** Pathshala (পাঠশালা).
+A role-based assignment, submission and grading system for schools and colleges, with an ASP.NET Core Web API, PostgreSQL and a Next.js frontend. Built by Nasir Khan as a recruitment project.
+
+The product name in the UI is Pathshala (পাঠশালা).
+
+![Pathshala login screen](./docs/screenshot-login.png)
+
+| Admin overview | Teacher assignments | Student view on a phone |
+|---|---|---|
+| ![Admin overview](./docs/screenshot-admin.png) | ![Teacher assignments](./docs/screenshot-teacher.png) | ![Student assignments at 390 px](./docs/screenshot-student-mobile.png) |
 
 ## Features
 
-### Role-Based Access (Admin, Teacher, Student)
+### Role-based access (Admin, Teacher, Student)
 
-- **Admin**: Manage users, classes/courses, subjects, and teacher-subject assignments. Read access to all assignments and submissions.
-- **Teacher**: Create/update/delete assignments (draft or published) for their assigned class+subject. View and grade submissions with marks and feedback.
-- **Student**: View published assignments for their class. Submit answers, update submissions before the deadline, and view grades and feedback.
+- **Admin**: manage users, classes and courses, subjects, and teacher-subject assignments. Read access to all assignments and submissions.
+- **Teacher**: create, update and delete assignments (draft or published) for their assigned class and subject. View and grade submissions with marks and feedback.
+- **Student**: view published assignments for their class, submit answers, update submissions before the deadline, and see grades and feedback.
 
-### Business Rules Enforced
+### Business rules enforced by the API
 
-1. **Draft visibility**: Draft assignments are invisible to students.
-2. **Class scoping**: Students can only see and submit to assignments for their own class.
-3. **Deadline enforcement**: Submissions after the deadline are rejected.
-4. **Submission ownership**: Students can only update their own submissions, and only before the deadline.
-5. **Marks bounds**: Grading marks cannot exceed the assignment's max marks or be negative.
-6. **Teacher ownership**: Teachers can only grade/view submissions for assignments they own.
-7. **Backend-enforced authorization**: Every protected endpoint has `[Authorize(Roles=...)]` plus service-layer ownership checks.
+1. **Draft visibility**: draft assignments are invisible to students.
+2. **Class scoping**: students can only see and submit to assignments for their own class.
+3. **Deadline enforcement**: submissions after the deadline are rejected.
+4. **Submission ownership**: students can only update their own submissions, and only before the deadline.
+5. **Marks bounds**: marks cannot exceed the assignment's maximum or be negative.
+6. **Teacher ownership**: teachers can only grade and view submissions for assignments they own.
+7. **Backend-enforced authorization**: every protected endpoint has `[Authorize(Roles=...)]` plus service-layer ownership checks.
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Backend | ASP.NET Core 9 Web API, C#, EF Core 9, PostgreSQL (Npgsql) |
-| Auth | JWT Bearer tokens, BCrypt password hashing |
+| Auth | JWT bearer tokens, BCrypt password hashing |
 | Validation | FluentValidation |
-| Logging | Serilog (console + rolling file) |
-| API Docs | Swashbuckle (Swagger UI with JWT support) |
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| Forms | react-hook-form + zod |
+| Logging | Serilog (console and rolling file) |
+| API docs | Swashbuckle (Swagger UI with JWT support) |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Forms | react-hook-form and zod |
 | Tests | xUnit, Moq, EF Core In-Memory |
+| CI | GitHub Actions: .NET build and tests, API smoke test on PostgreSQL 17, frontend lint, type-check and build on Node 20 and 22 |
 
-## Project Structure
-
-```
-assignment-system/
-├── backend/
-│   ├── AssignmentSystem.Api/          # ASP.NET Core Web API
-│   │   ├── Controllers/               # Auth, Users, Classes, Subjects, Assignments, Submissions
-│   │   ├── Services/                  # Business logic with rule enforcement
-│   │   ├── Models/                    # EF Core entities
-│   │   ├── Data/                      # AppDbContext, SeedData, Migrations
-│   │   ├── DTOs/                      # Request/response DTOs
-│   │   ├── Middleware/                # Global exception handler (RFC 7807)
-│   │   ├── Exceptions/                # Typed domain exceptions
-│   │   └── Program.cs                 # DI, auth, Swagger, migration config
-│   └── AssignmentSystem.Tests/        # xUnit tests (28 tests, all passing)
-├── frontend/                          # Next.js app
-│   └── src/
-│       ├── app/                       # Pages: login, admin/*, teacher/*, student/*
-│       ├── lib/                       # API client, auth, types
-│       └── middleware.ts              # Route protection by role
-├── database/
-│   └── setup.sql                      # Database creation script
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-## Setup
+## Quick start
 
 ### Prerequisites
 
 - .NET 9 SDK
-- Node.js 18+ (tested with Node 22)
-- PostgreSQL 14+ (tested with PostgreSQL 17)
+- Node.js 20.9 or later (tested with Node 20 and 22)
+- PostgreSQL 14 or later (tested with PostgreSQL 17)
 
-### 1. Database Setup
+### 1. Database
 
 ```bash
-# Create the database
-psql -U postgres -c "CREATE DATABASE assignment_system;"
-
-# Or use the provided script
-psql -U postgres -f database/setup.sql
+psql -U postgres -f database/setup.sql      # creates the assignment_system database
 ```
 
-### 2. Backend Setup
+Tables are created by the EF Core migrations, which the API applies on startup.
+
+### 2. Backend
+
+The API needs a connection string and a JWT signing secret of at least 32 bytes. In Development a local-only key from `appsettings.Development.json` is used if you do not set one; in any other environment the API refuses to start without a private `Jwt__Secret`.
 
 ```bash
 cd backend/AssignmentSystem.Api
 
-# Set your connection string and JWT secret (use environment variables or user-secrets)
-# On Windows PowerShell:
-$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=assignment_system;Username=postgres;Password=YOUR_PASSWORD"
-$env:Jwt__Secret = "YourSuperSecretKeyMustBeAtLeast32CharsLong!!"
-$env:ASPNETCORE_ENVIRONMENT = "Development"
+# bash / zsh
+export ASPNETCORE_ENVIRONMENT=Development
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=assignment_system;Username=postgres;Password=YOUR_PASSWORD"
+export Jwt__Secret="$(openssl rand -base64 48)"
 
-# Apply migration and seed data (happens automatically on startup)
+# Windows PowerShell
+# $env:ASPNETCORE_ENVIRONMENT = "Development"
+# $env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=assignment_system;Username=postgres;Password=YOUR_PASSWORD"
+# $env:Jwt__Secret = "<a random string of at least 32 characters>"
+
 dotnet run
 ```
 
-The API will be available at `http://localhost:5000` (or `https://localhost:5001`).
-Swagger UI is available at `/swagger`.
+The API listens on `http://localhost:5000`. Swagger UI is at `/swagger` and a health check at `/health`. See `.env.example` for every setting.
 
-### 3. Frontend Setup
+### 3. Frontend
 
 ```bash
 cd frontend
-npm install
-cp .env.local.example .env.local  # Edit if your API URL differs
+npm ci
+cp .env.local.example .env.local   # edit if your API URL differs
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000`.
+The frontend runs on `http://localhost:3000`.
 
-### 4. Run Tests
+### 4. Tests and checks
 
 ```bash
-# From the repository root (where AssignmentSystem.sln lives)
-dotnet test
+dotnet test                        # from the repository root
+cd frontend && npm run lint && npm run typecheck && npm run build
 ```
 
-## Demo Credentials
+## Demo credentials
 
 | Role | Email | Password |
 |---|---|---|
@@ -124,7 +112,37 @@ dotnet test
 | Teacher | abdur.rahman@edu.bd | Passw0rd! |
 | Student | sadia.islam@edu.bd | Passw0rd! |
 
-These are seeded automatically on first run (in Development environment). Passwords are hashed with BCrypt in the database.
+These accounts are seeded on first run in the Development environment only (set `Seed__DemoData=true` to seed elsewhere, for a demo deployment). Passwords are stored as BCrypt hashes. Change or remove these accounts on any shared deployment.
+
+## Project structure
+
+```
+pathshala-assignment-system/
+├── backend/
+│   ├── AssignmentSystem.Api/          # ASP.NET Core Web API
+│   │   ├── Controllers/               # Auth, users, classes, subjects, assignments, submissions
+│   │   ├── Services/                  # Business logic and rule enforcement
+│   │   ├── Models/                    # EF Core entities
+│   │   ├── Data/                      # AppDbContext and seed data
+│   │   ├── Migrations/                # EF Core migrations
+│   │   ├── DTOs/                      # Request and response DTOs
+│   │   ├── Middleware/                # Global exception handler (RFC 7807)
+│   │   ├── exceptions/                # Typed domain exceptions
+│   │   └── Program.cs                 # DI, auth, Swagger, CORS, migration and seeding
+│   └── AssignmentSystem.Tests/        # xUnit tests (28)
+├── frontend/                          # Next.js app
+│   └── src/
+│       ├── app/                       # Pages: login, admin/*, teacher/*, student/*
+│       ├── components/                # UI primitives and login animations
+│       ├── lib/                       # API client, auth helpers, types
+│       └── proxy.ts                   # Route protection by role (Next.js proxy)
+├── database/                          # setup.sql, reset.sql, schema.sql (generated)
+├── docs/                              # README screenshots
+├── .github/workflows/ci.yml           # CI
+├── .env.example                       # every configuration key
+├── AssignmentSystem.sln
+└── LICENSE
+```
 
 ## API Endpoints
 
@@ -173,24 +191,12 @@ These are seeded automatically on first run (in Development environment). Passwo
 ## Known Limitations
 
 1. **Token storage**: Uses `localStorage` instead of httpOnly cookies. Acceptable for a demo project; would migrate to cookies for production.
-2. **No frontend tests**: Backend has comprehensive unit tests; frontend testing (e.g., Playwright/Jest) is not included.
+2. **No frontend tests**: The backend has unit tests and CI runs an API smoke test against PostgreSQL; the frontend is linted, type-checked and built in CI but has no automated UI tests.
 3. **No pagination UI**: Backend supports pagination, but the frontend loads up to 50 items per page without pagination controls.
 4. **No file upload**: Submissions are text-only. File attachments would require additional storage and security considerations.
 5. **No real-time updates**: No WebSocket/SSE for live submission notifications.
-6. **PostgreSQL password**: The connection string requires the actual PostgreSQL password to be set via environment variable. The `.env.example` shows the placeholder.
+6. **PostgreSQL password**: The connection string requires the actual PostgreSQL password to be set via environment variable. `.env.example` shows the placeholder.
 
-## Quality Checklist
+## License
 
-- [x] Backend builds and runs from README instructions
-- [x] Frontend builds and runs from README instructions
-- [x] Database created from EF Core migrations + automatic seed
-- [x] Working demo credentials for Admin, Teacher, Student
-- [x] `.env.example` present; no real secrets in repo
-- [x] Every protected endpoint enforces role + ownership, verified by tests
-- [x] `dotnet test` passes cleanly (28 tests, 0 failures)
-- [x] Swagger UI with JWT authentication
-- [x] Loading/error/empty states on every screen
-- [x] Client-side form validation mirroring backend rules
-- [x] Responsive layout (mobile + desktop)
-- [x] No TODOs, placeholder text, or commented-out code
-- [x] Assumptions documented
+Released under the [MIT License](./LICENSE). Copyright (c) 2026 Nasir Khan.

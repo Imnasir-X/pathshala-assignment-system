@@ -12,9 +12,7 @@ export default function MySubmissionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSubs = async () => {
-    setLoading(true);
-    setError(null);
+  const loadSubs = async () => {
     try {
       const [subs, assignData] = await Promise.all([
         apiFetch<Submission[]>('/api/submissions/mine?page=1&pageSize=50'),
@@ -28,8 +26,10 @@ export default function MySubmissionsPage() {
       setLoading(false);
     }
   };
+  const fetchSubs = () => { setLoading(true); setError(null); return loadSubs(); };
 
-  useEffect(() => { fetchSubs(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadSubs(); }, []);
 
   if (loading) {
     return (

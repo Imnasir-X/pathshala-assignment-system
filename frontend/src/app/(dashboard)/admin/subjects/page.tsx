@@ -14,8 +14,7 @@ export default function AdminSubjectsPage() {
   const [form, setForm] = useState({ name: '', code: '', classCourseId: '' });
   const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true); setError(null);
+  const loadData = async () => {
     try {
       const [subs, cls] = await Promise.all([
         apiFetch<Subject[]>('/api/subjects?page=1&pageSize=50'),
@@ -25,7 +24,9 @@ export default function AdminSubjectsPage() {
     } catch { setError('Failed to load subjects.'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { fetchData(); }, []);
+  const fetchData = () => { setLoading(true); setError(null); return loadData(); };
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is only set after the awaited request settles
+  useEffect(() => { loadData(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +78,7 @@ export default function AdminSubjectsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDeleteTarget(null)}>
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Delete subject?</h3>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>This will permanently delete "{deleteTarget.name}".</p>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>This will permanently delete &ldquo;{deleteTarget.name}&rdquo;.</p>
             <div className="flex justify-end gap-3"><button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded-lg text-sm font-medium border" style={{ borderColor: 'var(--border-strong)', color: 'var(--text-secondary)' }}>Cancel</button><button onClick={() => confirmDelete(deleteTarget.id)} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: 'var(--danger)' }}>Delete</button></div>
           </div>
         </div>

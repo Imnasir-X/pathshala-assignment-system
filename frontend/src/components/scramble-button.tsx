@@ -17,11 +17,23 @@
  * and disables the effect under prefers-reduced-motion.
  */
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 
 const SCRAMBLE_CHARS = '!@#$%^&*():{};|,.<>/?';
 const SCRAMBLE_CYCLES = 4;
 const STEP_MS = 16;
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+// Respect prefers-reduced-motion: no scramble, no sweep.
+function subscribeReducedMotion(onChange: () => void): () => void {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
+function getReducedMotion(): boolean {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
 
 interface ScrambleButtonProps {
   /** Idle label, e.g. "Sign in". */
@@ -45,33 +57,26 @@ export default function ScrambleButton({
   sweepColor = '#99f6e4',
   style,
 }: ScrambleButtonProps) {
-  const [text, setText] = useState(label);
+  const [scramble, setScramble] = useState<{ label: string; text: string } | null>(null);
   const [active, setActive] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
   const rafRef = useRef<number | null>(null);
-  const configRef = useRef({ label, loading });
-  configRef.current = { label, loading };
 
-  // Respect prefers-reduced-motion: no scramble, no sweep.
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  // Cancel any running scramble and reset the label (used on leave/blur and
-  // whenever `loading` or `label` changes, e.g. click during scramble).
-  const stopScramble = () => {
+  const cancelFrame = () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-    setText(configRef.current.label);
+  };
+
+  // Cancel any running scramble and show the real label again (used on
+  // leave/blur).
+  const stopScramble = () => {
+    cancelFrame();
+    setScramble(null);
   };
 
   const startScramble = () => {
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    const target = configRef.current.label;
+    cancelFrame();
+    const target = label;
     const letters = [...target];
     const total = letters.length * SCRAMBLE_CYCLES;
     let step = 0;
@@ -88,11 +93,11 @@ export default function ScrambleButton({
             return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
           })
           .join('');
-        setText(scrambled);
+        setScramble({ label: target, text: scrambled });
         step++;
         if (step >= total) {
           rafRef.current = null;
-          setText(target);
+          setScramble(null);
           return;
         }
       }
@@ -103,7 +108,7 @@ export default function ScrambleButton({
 
   const activate = () => {
     setActive(true);
-    if (configRef.current.loading || reducedMotion) return;
+    if (loading || reducedMotion) return;
     startScramble();
   };
 
@@ -112,14 +117,14 @@ export default function ScrambleButton({
     stopScramble();
   };
 
-  useEffect(() => {
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    setText(loading ? loadingLabel : label);
-  }, [loading, label, loadingLabel]);
+  // A change of label or loading state (e.g. a click during the scramble)
+  // stops the animation; stale scramble text is ignored below because it is
+  // tagged with the label it was generated for.
+  useEffect(() => cancelFrame, [loading, label, loadingLabel]);
 
   const displayLabel = loading ? loadingLabel : label;
-  const showScramble = !loading && text !== label;
+  const showScramble = !loading && scramble !== null && scramble.label === label && scramble.text !== label;
+  const text = showScramble ? scramble.text : displayLabel;
 
   return (
     <button
@@ -147,7 +152,7 @@ export default function ScrambleButton({
       <span aria-hidden className="relative inline-flex items-center justify-center">
         <span className="invisible">{displayLabel}</span>
         <span className="absolute inset-0 flex items-center justify-center">
-          {showScramble ? text : displayLabel}
+          {text}
         </span>
       </span>
     </button>

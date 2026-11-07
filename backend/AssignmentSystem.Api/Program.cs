@@ -38,7 +38,20 @@ builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Secret"] ?? "DefaultDevSecretKeyAtLeast32Characters!!";
+var jwtKey = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Secret is not configured or is shorter than 32 bytes. " +
+        "Set it with the Jwt__Secret environment variable or `dotnet user-secrets set Jwt:Secret <value>`.");
+}
+// Keys that have been committed to this repository must never sign tokens outside Development.
+string[] publicDevKeys = ["DevOnlySecretKeyAtLeast32CharactersLong!!", "DefaultDevSecretKeyAtLeast32Characters!!"];
+if (!builder.Environment.IsDevelopment() && publicDevKeys.Contains(jwtKey))
+{
+    throw new InvalidOperationException(
+        "Jwt:Secret is set to a development key that is published in this repository. Configure a private secret.");
+}
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -148,7 +161,12 @@ using (var scope = app.Services.CreateScope())
         {
             db.Database.Migrate();
         }
-        await SeedData.SeedAsync(db);
+        // Demo accounts use a published password, so they are only seeded in
+        // Development unless explicitly enabled with Seed__DemoData=true.
+        if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Seed:DemoData"))
+        {
+            await SeedData.SeedAsync(db);
+        }
     }
     catch (Exception ex)
     {
